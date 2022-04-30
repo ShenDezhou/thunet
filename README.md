@@ -1,5 +1,5 @@
-# Models
-1. **Neural networks**  
+# THUNET: A simple deep learning framework for scientific and education purpos.
+1. **Neural networks[1]**  
     * Layers / Layer-wise ops
         - Add
         - Flatten
@@ -69,5 +69,12 @@
         - `deconv2D`
         - `minibatch`
 2. **BERT** 
-   * vanilla BERT
-   * simple BERT
+   * Vanilla BERT
+   * Simple BERT
+
+
+3. **REFERENCE**
+Our contribution is implementation of the vanilla BERT and simple BERT.  
+All other codes following the licence claimed by (ddbourgin)[https://github.com/ddbourgin]  in his (Numpy_ML)![https://github.com/ddbourgin/numpy-ml]  project.
+
+[1] David Bourgin. Machine learning, in numpy. https://github.com/ddbourgin/numpy-ml.
