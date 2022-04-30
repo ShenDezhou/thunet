@@ -353,7 +353,7 @@ class BERT(object):
             print(fstr.format(i + 1, loss, prev_loss - loss, (time() - estart) / 60.0))
             prev_loss = loss
 
-from thunet.utils.testing import (
+from thunet.neural_nets.utils.testing import (
     random_one_hot_matrix,
     random_stochastic_matrix,
     random_tensor,

@@ -6,8 +6,8 @@ from setuptools import setup, find_packages
 with open("README.md", encoding="utf-8") as f:
     LONG_DESCRIPTION = f.read()
 
-with open("requirements.txt") as requirements:
-    REQUIREMENTS = [r.strip() for r in requirements if r != "\n"]
+# with open("requirements.txt") as requirements:
+#     REQUIREMENTS = [r.strip() for r in requirements if r != "\n"]
 
 PROJECT_URLS = {
     "Bug Tracker": "https://github.com/ShenDezhou/thunet/issues",
@@ -17,7 +17,7 @@ PROJECT_URLS = {
 
 setup(
     name="thunet",
-    version="0.0.0",
+    version="0.0.3",
     author="Dezhou Shen",
     author_email="sdz15@tsinghua.org.cn",
     project_urls=PROJECT_URLS,
@@ -25,7 +25,10 @@ setup(
     description="A Deep learning framework for scientific and educational purpose",
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
-    install_requires=REQUIREMENTS,
+    install_requires=[
+        "numpy",
+        "scipy"
+    ],
     packages=find_packages(where='thunet', include=['*']),
     package_dir={"": "thunet"},
     license="GPLv3+",
