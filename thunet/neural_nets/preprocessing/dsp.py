@@ -218,7 +218,7 @@ def __DCT2(frame):
     K = np.divide(F, k, out=np.zeros_like(F), where=F != 0)
 
     FC = np.cos(F * np.pi / N + K * np.pi / 2 * N)
-    return 2 * (FC @ frame)
+    return 2 * np.matmul(FC , frame)
 
 
 def DFT(frame, positive_only=True):
@@ -599,7 +599,7 @@ def mel_spectrogram(
 
     # compute the power at each filter in the Mel filterbank
     fbank = mel_filterbank(N, n_filters=n_filters, fs=fs)
-    filter_energies = power_spec @ fbank.T
+    filter_energies = np.matmul(power_spec , fbank.T)
     filter_energies -= np.mean(filter_energies, axis=0) if mean_normalize else 0
     filter_energies[filter_energies == 0] = eps
     return filter_energies, energy_per_frame

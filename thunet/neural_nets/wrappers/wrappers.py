@@ -3,7 +3,18 @@ A collection of objects thats can wrap / otherwise modify arbitrary neural
 network layers.
 """
 
-from abc import ABC, abstractmethod
+import sys
+if sys.version.startswith('2'):
+    from abc import ABCMeta, abstractmethod
+
+    class ABC:
+        """Helper class that provides a standard way to create an ABC using
+        inheritance.
+        """
+        __metaclass__ = ABCMeta
+
+else:
+    from abc import ABC, abstractmethod
 
 import numpy as np
 
@@ -14,7 +25,10 @@ class WrapperBase(ABC):
         self._base_layer = wrapped_layer
         if hasattr(wrapped_layer, "_base_layer"):
             self._base_layer = wrapped_layer._base_layer
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
     @abstractmethod
     def _init_wrapper_params(self):
@@ -169,7 +183,10 @@ class Dropout(WrapperBase):
         p : float in [0, 1)
             The dropout propbability during training
         """
-        super().__init__(wrapped_layer)
+        if sys.version.startswith('2'):
+            super(Dropout, self).__init__(wrapped_layer)
+        else:
+            super().__init__(wrapped_layer)
         self.p = p
         self._init_wrapper_params()
         self._init_params()

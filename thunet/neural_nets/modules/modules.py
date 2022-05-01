@@ -1,4 +1,15 @@
-from abc import ABC, abstractmethod
+import sys
+if sys.version.startswith('2'):
+    from abc import ABCMeta, abstractmethod
+
+    class ABC:
+        """Helper class that provides a standard way to create an ABC using
+        inheritance.
+        """
+        __metaclass__ = ABCMeta
+
+else:
+    from abc import ABC, abstractmethod
 
 import re
 import numpy as np
@@ -24,7 +35,10 @@ class ModuleBase(ABC):
         self.X = None
         self.trainable = True
 
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
     @abstractmethod
     def _init_params(self, **kwargs):
@@ -170,7 +184,10 @@ class WavenetResidualModule(ModuleBase):
             :class:`~numpy_ml.neural_nets.optimizers.SGD` optimizer with default
             parameters. Default is None.
         """
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
         self.init = init
         self.dilation = dilation
@@ -427,7 +444,10 @@ class SkipConnectionIdentityModule(ModuleBase):
         init : {'glorot_normal', 'glorot_uniform', 'he_normal', 'he_uniform'}
             The weight initialization strategy. Default is 'glorot_uniform'.
         """
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
         self.init = init
         self.in_ch = None
@@ -705,7 +725,10 @@ class SkipConnectionConvModule(ModuleBase):
             :class:`~numpy_ml.neural_nets.optimizers.SGD` optimizer with
             default parameters. Default is None.
         """
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
         self.init = init
         self.pad1 = pad1
@@ -1020,7 +1043,10 @@ class BidirectionalLSTM(ModuleBase):
         init : {'glorot_normal', 'glorot_uniform', 'he_normal', 'he_uniform'}
             The weight initialization strategy. Default is 'glorot_uniform'.
         """
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
         self.init = init
         self.n_in = None

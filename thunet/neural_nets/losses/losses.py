@@ -1,4 +1,15 @@
-from abc import ABC, abstractmethod
+import sys
+if sys.version.startswith('2'):
+    from abc import ABCMeta, abstractmethod
+
+    class ABC:
+        """Helper class that provides a standard way to create an ABC using
+        inheritance.
+        """
+        __metaclass__ = ABCMeta
+
+else:
+    from abc import ABC, abstractmethod
 
 import numpy as np
 
@@ -12,7 +23,10 @@ from ..initializers import (
 
 class ObjectiveBase(ABC):
     def __init__(self):
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
     @abstractmethod
     def loss(self, y_true, y_pred):
@@ -37,7 +51,10 @@ class SquaredError(ObjectiveBase):
                 \mathcal{L}(\mathbf{y}, \hat{\mathbf{y}})
                     = 0.5 ||\hat{\mathbf{y}} - \mathbf{y}||_2^2
         """
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
     def __call__(self, y, y_pred):
         return self.loss(y, y_pred)
@@ -121,7 +138,10 @@ class CrossEntropy(ObjectiveBase):
                 \mathcal{L}(\mathbf{y}, \hat{\mathbf{y}})
                     = \sum_i y_i \log \hat{y}_i
         """
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
     def __call__(self, y, y_pred):
         return self.loss(y, y_pred)
@@ -249,7 +269,10 @@ class VAELoss(ObjectiveBase):
         .. [1] Kingma, D. P. & Welling, M. (2014). "Auto-encoding variational Bayes".
            *arXiv preprint arXiv:1312.6114.* https://arxiv.org/pdf/1312.6114.pdf
         """
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
     def __call__(self, y, y_pred, t_mean, t_log_var):
         return self.loss(y, y_pred, t_mean, t_log_var)
@@ -380,7 +403,10 @@ class WGAN_GPLoss(ObjectiveBase):
             The gradient penalty coefficient. Default is 10.
         """
         self.lambda_ = lambda_
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
     def __call__(self, Y_fake, module, Y_real=None, gradInterp=None):
         """
@@ -604,7 +630,10 @@ class NCELoss(ObjectiveBase):
         derived_variables: dict
             Useful intermediate values computed during the loss computation.
         """
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
         self.init = init
         self.n_in = None
@@ -779,8 +808,8 @@ class NCELoss(ObjectiveBase):
         noise_samples = (neg_samples, p_target, p_neg_samples)
 
         # compute the logit for the negative samples and target
-        Z_target = X @ W[target].T + b[0, target]
-        Z_neg = X @ W[neg_samples].T + b[0, neg_samples]
+        Z_target = np.matmul(X , W[target].T) + b[0, target]
+        Z_neg = np.matmul(X , W[neg_samples].T) + b[0, neg_samples]
 
         # subtract the log probability of each label under the noise dist
         if self.subtract_log_label_prob:
@@ -888,14 +917,14 @@ class NCELoss(ObjectiveBase):
         dB_neg = dLdZ_neg.sum(axis=(0, 1))
         dB_target = dLdZ_target.sum(axis=(1, 2))
 
-        dW_neg = (dLdZ_neg.transpose(0, 2, 1) @ X).sum(axis=0)
-        dW_target = (dLdZ_target.transpose(0, 2, 1) @ X).sum(axis=1)
+        dW_neg = np.matmul(dLdZ_neg.transpose(0, 2, 1) , X).sum(axis=0)
+        dW_target = np.matmul(dLdZ_target.transpose(0, 2, 1) , X).sum(axis=1)
 
         # TODO: can this be done with np.einsum instead?
         dX_target = np.vstack(
-            [dLdZ_target[[ix]] @ W[[t]] for ix, t in enumerate(target)]
+            [np.matmul(dLdZ_target[[ix]] , W[[t]]) for ix, t in enumerate(target)]
         )
-        dX_neg = dLdZ_neg @ W[neg_samples]
+        dX_neg = np.matmul(dLdZ_neg , W[neg_samples])
 
         hits = list(set(target).intersection(set(neg_samples)))
         hit_ixs = [np.where(target == h)[0] for h in hits]

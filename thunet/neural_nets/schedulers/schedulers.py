@@ -1,5 +1,16 @@
 from copy import deepcopy
-from abc import ABC, abstractmethod
+import sys
+if sys.version.startswith('2'):
+    from abc import ABCMeta, abstractmethod
+
+    class ABC:
+        """Helper class that provides a standard way to create an ABC using
+        inheritance.
+        """
+        __metaclass__ = ABCMeta
+
+else:
+    from abc import ABC, abstractmethod
 
 import numpy as np
 
@@ -50,7 +61,10 @@ class ConstantScheduler(SchedulerBase):
         initial_lr : float
             The learning rate. Default is 0.01
         """
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
         self.lr = lr
         self.hyperparameters = {"id": "ConstantScheduler", "lr": self.lr}
 
@@ -103,7 +117,10 @@ class ExponentialScheduler(SchedulerBase):
             The amount to decay the learning rate at each new stage. Default is
             0.1.
         """
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
         self.decay = decay
         self.staircase = staircase
         self.initial_lr = initial_lr
@@ -173,7 +190,10 @@ class NoamScheduler(SchedulerBase):
             The number of steps in the warmup stage of training. Default is
             4000.
         """
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
         self.model_dim = model_dim
         self.scale_factor = scale_factor
         self.warmup_steps = warmup_steps
@@ -223,7 +243,10 @@ class KingScheduler(SchedulerBase):
             The amount to decay the learning rate at each new stage. Default is
             0.99.
         """
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
         self.decay = decay
         self.patience = patience
         self.initial_lr = initial_lr
@@ -309,7 +332,7 @@ class KingScheduler(SchedulerBase):
 
         # perform OLS on the loss entries to calc the slope mean
         X = np.c_[np.ones(N), np.arange(i, len(loss_history))]
-        intercept, s_mean = np.linalg.inv(X.T @ X) @ X.T @ loss
+        intercept, s_mean = np.matmul(np.matmul(np.matmul(np.linalg.inv(X.T , X)) , X.T) , loss)
         loss_pred = s_mean * X[:, 1] + intercept
 
         # compute the variance of our loss predictions and use this to compute

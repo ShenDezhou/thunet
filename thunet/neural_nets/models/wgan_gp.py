@@ -507,7 +507,7 @@ class WGAN_GP(object):
                     self.update("C", C_loss)
 
                 if self.verbose:
-                    fstr = "\t[Critic batch {}] Critic loss: {:.3f} {:.3f}∆ ({:.1f}s/batch)"
+                    fstr = "\t[Critic batch {}] Critic loss: {:.3f} {:.3f}delta ({:.1f}s/batch)"
                     print(fstr.format(j + 1, C_loss, prev_C - C_loss, time() - bstart))
                     prev_C = C_loss
 
@@ -523,6 +523,6 @@ class WGAN_GP(object):
                 print(fstr.format(i + 1, G_loss, C_loss))
 
             elif self.verbose:
-                fstr = "[Epoch {}] Gen. loss: {:.3f}  {:.3f}∆ ({:.1f}s/epoch)"
+                fstr = "[Epoch {}] Gen. loss: {:.3f}  {:.3f}delta ({:.1f}s/epoch)"
                 print(fstr.format(i + 1, G_loss, prev_G - G_loss, time() - estart))
                 prev_G = G_loss

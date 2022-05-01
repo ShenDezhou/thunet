@@ -660,7 +660,7 @@ def conv2D(X, W, stride, pad, dilation=0):
     X_col, _ = im2col(X, W.shape, p, s, d)
     W_col = W.transpose(3, 2, 0, 1).reshape(out_ch, -1)
 
-    Z = (W_col @ X_col).reshape(out_ch, out_rows, out_cols, n_ex).transpose(3, 1, 2, 0)
+    Z = np.matmul(W_col , X_col).reshape(out_ch, out_rows, out_cols, n_ex).transpose(3, 1, 2, 0)
 
     return Z
 

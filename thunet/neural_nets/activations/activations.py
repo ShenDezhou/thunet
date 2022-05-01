@@ -1,6 +1,17 @@
 """A collection of activation function objects for building neural networks"""
 
-from abc import ABC, abstractmethod
+import sys
+if sys.version.startswith('2'):
+    from abc import ABCMeta, abstractmethod
+
+    class ABC:
+        """Helper class that provides a standard way to create an ABC using
+        inheritance.
+        """
+        __metaclass__ = ABCMeta
+
+else:
+    from abc import ABC, abstractmethod
 
 import numpy as np
 
@@ -8,7 +19,10 @@ import numpy as np
 class ActivationBase(ABC):
     def __init__(self, **kwargs):
         """Initialize the ActivationBase object"""
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
     def __call__(self, z):
         """Apply the activation function to an input"""
@@ -30,7 +44,10 @@ class ActivationBase(ABC):
 class Sigmoid(ActivationBase):
     def __init__(self):
         """A logistic sigmoid activation function."""
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
     def __str__(self):
         """Return a string representation of the activation function"""
@@ -95,7 +112,10 @@ class ReLU(ActivationBase):
     """
 
     def __init__(self):
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
     def __str__(self):
         """Return a string representation of the activation function"""
@@ -160,7 +180,10 @@ class LeakyReLU(ActivationBase):
 
     def __init__(self, alpha=0.3):
         self.alpha = alpha
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
     def __str__(self):
         """Return a string representation of the activation function"""
@@ -210,7 +233,10 @@ class LeakyReLU(ActivationBase):
 class Tanh(ActivationBase):
     def __init__(self):
         """A hyperbolic tangent activation function."""
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
     def __str__(self):
         """Return a string representation of the activation function"""
@@ -259,7 +285,10 @@ class Affine(ActivationBase):
         """
         self.slope = slope
         self.intercept = intercept
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
     def __str__(self):
         """Return a string representation of the activation function"""
@@ -308,7 +337,11 @@ class Identity(Affine):
         :class:`Identity` is just syntactic sugar for :class:`Affine` with
         slope = 1 and intercept = 0.
         """
-        super().__init__(slope=1, intercept=0)
+        if sys.version.startswith('2'):
+            super(Identity, self).__init__(slope=1, intercept=0)
+        else:
+            super().__init__(slope=1, intercept=0)
+
 
     def __str__(self):
         """Return a string representation of the activation function"""
@@ -346,7 +379,10 @@ class ELU(ActivationBase):
            Representations*.
         """
         self.alpha = alpha
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
     def __str__(self):
         """Return a string representation of the activation function"""
@@ -397,7 +433,10 @@ class ELU(ActivationBase):
 class Exponential(ActivationBase):
     def __init__(self):
         """An exponential (base e) activation function"""
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
     def __str__(self):
         """Return a string representation of the activation function"""
@@ -465,7 +504,10 @@ class SELU(ActivationBase):
         self.alpha = 1.6732632423543772848170429916717
         self.scale = 1.0507009873554804934193349852946
         self.elu = ELU(alpha=self.alpha)
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
     def __str__(self):
         """Return a string representation of the activation function"""
@@ -528,7 +570,10 @@ class HardSigmoid(ActivationBase):
         The hard sigmoid is a piecewise linear approximation of the logistic
         sigmoid that is computationally more efficient to compute.
         """
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
     def __str__(self):
         """Return a string representation of the activation function"""
@@ -585,7 +630,10 @@ class SoftPlus(ActivationBase):
 
         The derivative of the softplus activation is the logistic sigmoid.
         """
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
     def __str__(self):
         """Return a string representation of the activation function"""

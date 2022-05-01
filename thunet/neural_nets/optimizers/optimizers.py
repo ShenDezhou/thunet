@@ -1,5 +1,16 @@
 from copy import deepcopy
-from abc import ABC, abstractmethod
+import sys
+if sys.version.startswith('2'):
+    from abc import ABCMeta, abstractmethod
+
+    class ABC:
+        """Helper class that provides a standard way to create an ABC using
+        inheritance.
+        """
+        __metaclass__ = ABCMeta
+
+else:
+    from abc import ABC, abstractmethod
 
 import numpy as np
 from numpy.linalg import norm
@@ -90,7 +101,11 @@ class SGD(OptimizerBase):
             The learning rate scheduler. If None, use a constant learning
             rate equal to `lr`. Default is None.
         """
-        super().__init__(lr, lr_scheduler)
+
+        if sys.version.startswith('2'):
+            super(SGD, self).__init__(lr, lr_scheduler)
+        else:
+            super().__init__(lr, lr_scheduler)
 
         self.hyperparameters = {
             "id": "SGD",
@@ -194,7 +209,10 @@ class AdaGrad(OptimizerBase):
             The learning rate scheduler. If None, use a constant learning
             rate equal to `lr`. Default is None.
         """
-        super().__init__(lr, lr_scheduler)
+        if sys.version.startswith('2'):
+            super(AdaGrad, self).__init__(lr, lr_scheduler)
+        else:
+            super().__init__(lr, lr_scheduler)
 
         self.cache = {}
         self.hyperparameters = {
@@ -299,7 +317,11 @@ class RMSProp(OptimizerBase):
             The learning rate scheduler. If None, use a constant learning
             rate equal to `lr`. Default is None.
         """
-        super().__init__(lr, lr_scheduler)
+        if sys.version.startswith('2'):
+            super(RMSProp, self).__init__(lr, lr_scheduler)
+        else:
+            super().__init__(lr, lr_scheduler)
+
 
         self.cache = {}
         self.hyperparameters = {
@@ -403,7 +425,10 @@ class Adam(OptimizerBase):
             The learning rate scheduler. If None, use a constant learning rate
             equal to `lr`. Default is None.
         """
-        super().__init__(lr, lr_scheduler)
+        if sys.version.startswith('2'):
+            super(Adam, self).__init__(lr, lr_scheduler)
+        else:
+            super().__init__(lr, lr_scheduler)
 
         self.cache = {}
         self.hyperparameters = {

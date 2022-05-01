@@ -1,5 +1,16 @@
 """A collection of composable layer objects for building neural networks"""
-from abc import ABC, abstractmethod
+import sys
+if sys.version.startswith('2'):
+    from abc import ABCMeta, abstractmethod
+
+    class ABC:
+        """Helper class that provides a standard way to create an ABC using
+        inheritance.
+        """
+        __metaclass__ = ABCMeta
+
+else:
+    from abc import ABC, abstractmethod
 
 import numpy as np
 
@@ -36,7 +47,10 @@ class LayerBase(ABC):
         self.parameters = {}
         self.derived_variables = {}
 
-        super().__init__()
+        if sys.version.startswith('2'):
+            super(ABC, self).__init__()
+        else:
+            super().__init__()
 
     @abstractmethod
     def _init_params(self, **kwargs):
@@ -170,7 +184,10 @@ class DotProductAttention_new(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with
             default parameters. Default is None. Unused.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(DotProductAttention_new, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
 
         self.init = init
         self.scale = scale
@@ -236,7 +253,7 @@ class DotProductAttention_new(LayerBase):
             wn = dropout(softmax( (query @ key[n]) / sqrt(d_k) ))
 
             y = np.array([w0, ..., wn]) @ values
-                      (1 × n_ex)      (n_ex × d_v)
+                      (1 * n_ex)      (n_ex * d_v)
 
         In words, keys and queries are combined via dot-product to produce a
         score, which is then passed through a softmax to produce a weight on
@@ -289,12 +306,12 @@ class DotProductAttention_new(LayerBase):
 
     def _fwd(self, Q, K, V):
         """Actual computation of forward pass"""
-        # multi之后是768（即Q.shape[-1]为64 --由于是12个head）
-        # 由原先的Q.shape[-1]：64 改为Q.shape[0]：512
-        scale = 1 / np.sqrt(Q.shape[0]) if self.scale else 1 # Q.shape ： (512, 12, 1, 64)
-        scores = Q @ K.swapaxes(-2, -1) * scale  # attention scores
+        # multi after 768(that Q.shape[-1] is 64 -- because of 12 heads)
+        # from original Q.shape[-1]: 64 change to Q.shape[0]: 512
+        scale = 1 / np.sqrt(Q.shape[0]) if self.scale else 1 # Q.shape : (512, 12, 1, 64)
+        scores = np.matmul(Q , K.swapaxes(-2, -1)) * scale  # attention scores
         weights = scores  # attention weights
-        Y = weights @ V
+        Y = np.matmul(weights , V)
         return Y, weights
 
     def backward(self, dLdy, retain_grads=True):
@@ -341,12 +358,12 @@ class DotProductAttention_new(LayerBase):
         d_k = k.shape[-1]
         scale = 1 / np.sqrt(d_k) if self.scale else 1
 
-        dV = weights.swapaxes(-2, -1) @ dy
-        dWeights = dy @ v.swapaxes(-2, -1)
+        dV = np.matmul(weights.swapaxes(-2, -1) , dy)
+        dWeights = np.matmul(dy , v.swapaxes(-2, -1))
         if(type(dWeights) == list):
             dWeights = dWeights[0]
-        dQ = dWeights @ k * scale
-        dK = dWeights.swapaxes(-2, -1) @ q * scale
+        dQ = np.matmul(dWeights , k) * scale
+        dK = np.matmul(dWeights.swapaxes(-2, -1) , q) * scale
         return dQ, dK, dV
 
 
@@ -384,7 +401,10 @@ class DotProductAttention(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with
             default parameters. Default is None. Unused.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(DotProductAttention, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
 
         self.init = init
         self.scale = scale
@@ -450,7 +470,7 @@ class DotProductAttention(LayerBase):
             wn = dropout(softmax( (query @ key[n]) / sqrt(d_k) ))
 
             y = np.array([w0, ..., wn]) @ values
-                      (1 × n_ex)      (n_ex × d_v)
+                      (1 * n_ex)      (n_ex * d_v)
 
         In words, keys and queries are combined via dot-product to produce a
         score, which is then passed through a softmax to produce a weight on
@@ -504,9 +524,9 @@ class DotProductAttention(LayerBase):
     def _fwd(self, Q, K, V):
         """Actual computation of forward pass"""
         scale = 1 / np.sqrt(Q.shape[-1]) if self.scale else 1
-        scores = Q @ K.swapaxes(-2, -1) * scale  # attention scores
+        scores = np.matmul(Q , K.swapaxes(-2, -1)) * scale  # attention scores
         weights = self.softmax.forward(scores)  # attention weights
-        Y = weights @ V
+        Y = np.matmul(weights , V)
         return Y, weights
 
     def backward(self, dLdy, retain_grads=True):
@@ -553,13 +573,13 @@ class DotProductAttention(LayerBase):
         d_k = k.shape[-1]
         scale = 1 / np.sqrt(d_k) if self.scale else 1
 
-        dV = weights.swapaxes(-2, -1) @ dy
-        dWeights = dy @ v.swapaxes(-2, -1)
+        dV = np.matmul(weights.swapaxes(-2, -1) , dy)
+        dWeights = np.matmul(dy , v.swapaxes(-2, -1))
         dScores = self.softmax.backward(dWeights)
         if(type(dScores) == list):
             dScores = dScores[0]
-        dQ = dScores @ k * scale
-        dK = dScores.swapaxes(-2, -1) @ q * scale
+        dQ = np.matmul(dScores , k) * scale
+        dK = np.matmul(dScores.swapaxes(-2, -1) , q) * scale
         return dQ, dK, dV
 
 
@@ -583,7 +603,10 @@ class RBM(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with
             default parameters. Default is None.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(RBM, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
 
         self.K = K  # CD-K
         self.init = init
@@ -704,7 +727,7 @@ class RBM(LayerBase):
         b_out = self.parameters["b_out"]
 
         # compute hidden unit probabilities
-        Z_H = V @ W + b_out
+        Z_H = np.matmul(V , W) + b_out
         p_H = self.act_fn_H.fn(Z_H)
 
         # sample hidden states (stochastic binary values)
@@ -712,7 +735,7 @@ class RBM(LayerBase):
         H = H.astype(float)
 
         # always use probabilities when computing gradients
-        positive_grad = V.T @ p_H
+        positive_grad = np.matmul(V.T , p_H)
 
         # perform CD-k
         # TODO: use persistent CD-k
@@ -720,14 +743,14 @@ class RBM(LayerBase):
         H_prime = H.copy()
         for k in range(K):
             # resample v' given h (H_prime is binary for all but final step)
-            Z_V_prime = H_prime @ W.T + b_in
+            Z_V_prime = np.matmul(H_prime , W.T) + b_in
             p_V_prime = self.act_fn_V.fn(Z_V_prime)
 
             # don't resample visual units - always use raw probabilities!
             V_prime = p_V_prime
 
             # compute p(h' | v')
-            Z_H_prime = V_prime @ W + b_out
+            Z_H_prime = np.matmul(V_prime , W) + b_out
             p_H_prime = self.act_fn_H.fn(Z_H_prime)
 
             # if this is the final iteration of CD, keep hidden state
@@ -737,7 +760,7 @@ class RBM(LayerBase):
                 H_prime = np.random.rand(*p_H_prime.shape) <= p_H_prime
                 H_prime = H_prime.astype(float)
 
-        negative_grad = p_V_prime.T @ p_H_prime
+        negative_grad = np.matmul(p_V_prime.T , p_H_prime)
 
         if retain_derived:
             self.derived_variables["V"] = V
@@ -835,7 +858,10 @@ class Add(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with
             default parameters. Default is None.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(Add, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
         self.act_fn = ActivationInitializer(act_fn)()
         self._init_params()
 
@@ -931,7 +957,10 @@ class Multiply(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with
             default parameters. Default is None.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(Multiply, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
         self.act_fn = ActivationInitializer(act_fn)()
         self._init_params()
 
@@ -1028,7 +1057,10 @@ class Flatten(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with
             default parameters. Default is None.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(Flatten, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
 
         self.keep_dim = keep_dim
         self._init_params()
@@ -1162,7 +1194,10 @@ class BatchNorm2D(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with
             default parameters. Default is None.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(BatchNorm2D, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
 
         self.in_ch = None
         self.out_ch = None
@@ -1396,7 +1431,10 @@ class BatchNorm1D(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with
             default parameters. Default is None.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(BatchNorm1D, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
 
         self.n_in = None
         self.n_out = None
@@ -1587,7 +1625,10 @@ class LayerNorm2D(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with
             default parameters. Default is None.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(LayerNorm2D, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
 
         self.in_ch = None
         self.out_ch = None
@@ -1762,7 +1803,10 @@ class LayerNorm1D(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with
             default parameters. Default is None.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(LayerNorm1D, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
 
         self.n_in = None
         self.n_out = None
@@ -1929,7 +1973,10 @@ class Embedding(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with
             default parameters. Default is None.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(Embedding, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
         fstr = "'pool' must be either 'sum', 'mean', or None but got '{}'"
         assert pool in ["sum", "mean", None], fstr.format(pool)
 
@@ -2110,7 +2157,10 @@ class FullyConnected(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with
             default parameters. Default is None.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(FullyConnected, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
 
         self.init = init
         self.n_in = None
@@ -2182,7 +2232,7 @@ class FullyConnected(LayerBase):
         W = self.parameters["W"]
         b = self.parameters["b"]
 
-        Z = X @ W + b
+        Z = np.matmul(X , W) + b
         Y = self.act_fn(Z)
         return Y, Z
 
@@ -2225,11 +2275,11 @@ class FullyConnected(LayerBase):
         W = self.parameters["W"]
         b = self.parameters["b"]
 
-        Z = X @ W + b
+        Z = np.matmul(X , W) + b
         dZ = dLdy * self.act_fn.grad(Z)
 
-        dX = dZ @ W.T
-        dW = X.T @ dZ
+        dX = np.matmul(dZ , W.T)
+        dW = np.matmul(X.T , dZ)
         dB = dZ.sum(axis=0, keepdims=True)
         return dX, dW, dB
 
@@ -2238,12 +2288,12 @@ class FullyConnected(LayerBase):
         W = self.parameters["W"]
         b = self.parameters["b"]
 
-        dZ = self.act_fn.grad(X @ W + b)
-        ddZ = self.act_fn.grad2(X @ W + b)
+        dZ = self.act_fn.grad(np.matmul(X , W) + b)
+        ddZ = self.act_fn.grad2(np.matmul(X , W) + b)
 
-        ddX = dLdy @ W * dZ
-        ddW = dLdy.T @ (dLdy_bwd * dZ)
-        ddB = np.sum(dLdy @ W * dLdy_bwd * ddZ, axis=0, keepdims=True)
+        ddX = np.matmul(dLdy , W) * dZ
+        ddW = np.matmul(dLdy.T , (dLdy_bwd * dZ))
+        ddB = np.sum(np.matmul(dLdy , W) * dLdy_bwd * ddZ, axis=0, keepdims=True)
         return ddX, ddW, ddB
 
 
@@ -2279,7 +2329,10 @@ class Softmax(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with
             default parameters. Default is None. Unused for this layer.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(Softmax, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
 
         self.dim = dim
         self.n_in = None
@@ -2387,8 +2440,8 @@ class Softmax(LayerBase):
             dxi = []
             for dyi, xi in zip(*np.atleast_2d(dy, x)):
                 yi = self._fwd(xi.reshape(1, -1)).reshape(-1, 1)
-                dyidxi = np.diagflat(yi) - yi @ yi.T  # jacobian wrt. input sample xi
-                dxi.append(dyi @ dyidxi)
+                dyidxi = np.diagflat(yi) - np.matmul(yi , yi.T)  # jacobian wrt. input sample xi
+                dxi.append(np.matmul(dyi , dyidxi))
             dX.append(dxi)
         return np.array(dX).reshape(*X.shape)
 
@@ -2437,7 +2490,10 @@ class SparseEvolution(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with default
             parameters. Default is None.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(SparseEvolution, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
 
         self.init = init
         self.n_in = None
@@ -2519,7 +2575,7 @@ class SparseEvolution(LayerBase):
         b = self.parameters["b"]
         W_mask = self.parameters["W_mask"]
 
-        Z = X @ (W * W_mask) + b
+        Z = np.matmul(X , (W * W_mask)) + b
         Y = self.act_fn(Z)
         return Y, Z
 
@@ -2563,11 +2619,11 @@ class SparseEvolution(LayerBase):
         b = self.parameters["b"]
         W_sparse = W * self.parameters["W_mask"]
 
-        Z = X @ W_sparse + b
+        Z = np.matmul(X , W_sparse) + b
         dZ = dLdy * self.act_fn.grad(Z)
 
-        dX = dZ @ W_sparse.T
-        dW = X.T @ dZ
+        dX = np.matmul(dZ , W_sparse.T)
+        dW = np.matmul(X.T , dZ)
         dB = dZ.sum(axis=0, keepdims=True)
         return dX, dW, dB
 
@@ -2577,12 +2633,12 @@ class SparseEvolution(LayerBase):
         b = self.parameters["b"]
         W_sparse = W * self.parameters["W_mask"]
 
-        dZ = self.act_fn.grad(X @ W_sparse + b)
-        ddZ = self.act_fn.grad2(X @ W_sparse + b)
+        dZ = self.act_fn.grad(np.matmul(X , W_sparse) + b)
+        ddZ = self.act_fn.grad2(np.matmul(X , W_sparse) + b)
 
-        ddX = dLdy @ W * dZ
-        ddW = dLdy.T @ (dLdy_bwd * dZ)
-        ddB = np.sum(dLdy @ W_sparse * dLdy_bwd * ddZ, axis=0, keepdims=True)
+        ddX = np.matmul(dLdy , W) * dZ
+        ddW = np.matmul(dLdy.T , (dLdy_bwd * dZ))
+        ddB = np.sum(np.matmul(dLdy , W_sparse) * dLdy_bwd * ddZ, axis=0, keepdims=True)
         return ddX, ddW, ddB
 
     def update(self):
@@ -2684,7 +2740,10 @@ class Conv1D(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with
             default parameters. Default is None.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(Conv1D, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
 
         self.pad = pad
         self.init = init
@@ -2838,10 +2897,10 @@ class Conv1D(LayerBase):
 
         # compute gradients via matrix multiplication and reshape
         dB = dLdZ_col.sum(axis=1).reshape(1, 1, -1)
-        dW = (dLdZ_col @ X_col.T).reshape(out_ch, in_ch, fr, fc).transpose(2, 3, 1, 0)
+        dW = np.matmul(dLdZ_col , X_col.T).reshape(out_ch, in_ch, fr, fc).transpose(2, 3, 1, 0)
 
         # reshape columnized dX back into the same format as the input volume
-        dX_col = W_col @ dLdZ_col
+        dX_col = np.matmul(W_col , dLdZ_col)
         dX = col2im(dX_col, X2D.shape, W2D.shape, p2D, s, d).transpose(0, 2, 3, 1)
 
         return np.squeeze(dX, axis=1), np.squeeze(dW, axis=0), dB
@@ -2961,7 +3020,10 @@ class Conv2D(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with
             default parameters. Default is None.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(Conv2D, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
 
         self.pad = pad
         self.init = init
@@ -3110,10 +3172,10 @@ class Conv2D(LayerBase):
 
         # compute gradients via matrix multiplication and reshape
         dB = dLdZ_col.sum(axis=1).reshape(1, 1, 1, -1)
-        dW = (dLdZ_col @ X_col.T).reshape(out_ch, in_ch, fr, fc).transpose(2, 3, 1, 0)
+        dW = np.matmul(dLdZ_col , X_col.T).reshape(out_ch, in_ch, fr, fc).transpose(2, 3, 1, 0)
 
         # reshape columnized dX back into the same format as the input volume
-        dX_col = W_col @ dLdZ_col
+        dX_col = np.matmul(W_col , dLdZ_col)
         dX = col2im(dX_col, X.shape, W.shape, p, s, d).transpose(0, 2, 3, 1)
 
         return dX, dW, dB
@@ -3203,7 +3265,10 @@ class Pool2D(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with
             default parameters. Default is None.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(Pool2D, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
 
         self.pad = pad
         self.mode = mode
@@ -3396,7 +3461,10 @@ class Deconv2D(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with
             default parameters. Default is None.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(Deconv2D, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
 
         self.pad = pad
         self.init = init
@@ -3558,11 +3626,11 @@ class Deconv2D(LayerBase):
 
         # compute gradients via matrix multiplication and reshape
         dB = dLdZ_col.sum(axis=1).reshape(1, 1, 1, -1)
-        dW = (dLdZ_col @ X_col.T).reshape(out_ch, in_ch, fr, fc).transpose(2, 3, 1, 0)
+        dW = np.matmul(dLdZ_col , X_col.T).reshape(out_ch, in_ch, fr, fc).transpose(2, 3, 1, 0)
         dW = np.rot90(dW, 2)
 
         # reshape columnized dX back into the same format as the input volume
-        dX_col = W_col.T @ dLdZ_col
+        dX_col = np.matmul(W_col.T , dLdZ_col)
 
         total_pad = tuple(i + j for i, j in zip(p, _p))
         dX = col2im(dX_col, X.shape, W.shape, total_pad, s, 0).transpose(0, 2, 3, 1)
@@ -3616,7 +3684,10 @@ class RNNCell(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with default
             parameters. Default is None.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(RNNCell, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
 
         self.init = init
         self.n_in = None
@@ -3707,7 +3778,7 @@ class RNNCell(LayerBase):
             As.append(A0)
 
         # compute next hidden state
-        Zt = As[-1] @ Waa + ba.T + Xt @ Wax + bx.T
+        Zt = np.matmul(As[-1] , Waa) + ba.T + np.matmul(Xt , Wax) + bx.T
         At = self.act_fn(Zt)
 
         self.derived_variables["Z"].append(Zt)
@@ -3754,16 +3825,16 @@ class RNNCell(LayerBase):
         # compute gradient components at timestep t
         dA = dLdAt + dA_acc
         dZ = self.act_fn.grad(Zs[t]) * dA
-        dXt = dZ @ Wax.T
+        dXt = np.matmul(dZ , Wax.T)
 
         # update parameter gradients with signal from current step
-        self.gradients["Waa"] += As[t].T @ dZ
-        self.gradients["Wax"] += self.X[t].T @ dZ
+        self.gradients["Waa"] += np.matmul(As[t].T , dZ)
+        self.gradients["Wax"] += np.matmul(self.X[t].T , dZ)
         self.gradients["ba"] += dZ.sum(axis=0, keepdims=True).T
         self.gradients["bx"] += dZ.sum(axis=0, keepdims=True).T
 
         # update accumulator variable for hidden state
-        self.derived_variables["dLdA_accumulator"] = dZ @ Waa.T
+        self.derived_variables["dLdA_accumulator"] = np.matmul(dZ , Waa.T)
         return dXt
 
     def flush_gradients(self):
@@ -3837,7 +3908,10 @@ class LSTMCell(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with default
             parameters. Default is None.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(LSTMCell, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
 
         self.init = init
         self.n_in = None
@@ -3977,10 +4051,10 @@ class LSTMCell(LayerBase):
         # concatenate A_prev and Xt to create Zt
         Zt = np.hstack([A_prev, Xt])
 
-        Gft = self.gate_fn(Zt @ Wf + bf)
-        Gut = self.gate_fn(Zt @ Wu + bu)
-        Got = self.gate_fn(Zt @ Wo + bo)
-        Cct = self.act_fn(Zt @ Wc + bc)
+        Gft = self.gate_fn(np.matmul(Zt , Wf) + bf)
+        Gut = self.gate_fn(np.matmul(Zt , Wu) + bu)
+        Got = self.gate_fn(np.matmul(Zt , Wo) + bo)
+        Cct = self.act_fn(np.matmul(Zt , Wc) + bc)
         Ct = Gft * C_prev + Gut * Cct
         At = Got * self.act_fn(Ct)
 
@@ -4045,10 +4119,10 @@ class LSTMCell(LayerBase):
         dC = dC_acc + dA * Got * self.act_fn.grad(Ct)
 
         # compute the input to the gate functions at timestep t
-        _Go = Zt @ Wo + bo
-        _Gf = Zt @ Wf + bf
-        _Gu = Zt @ Wu + bu
-        _Gc = Zt @ Wc + bc
+        _Go = np.matmul(Zt , Wo) + bo
+        _Gf = np.matmul(Zt , Wf) + bf
+        _Gu = np.matmul(Zt , Wu) + bu
+        _Gc = np.matmul(Zt , Wc) + bc
 
         # compute gradients wrt the *input* to each gate
         dGot = dA * self.act_fn(Ct) * self.gate_fn.grad(_Go)
@@ -4056,13 +4130,13 @@ class LSTMCell(LayerBase):
         dGut = dC * Cct * self.gate_fn.grad(_Gu)
         dGft = dC * C_prev * self.gate_fn.grad(_Gf)
 
-        dZ = dGft @ Wf.T + dGut @ Wu.T + dCct @ Wc.T + dGot @ Wo.T
+        dZ = np.matmul(dGft , Wf.T) + np.matmul(dGut , Wu.T) + np.matmul(dCct , Wc.T) + np.matmul(dGot , Wo.T)
         dXt = dZ[:, self.n_out :]
 
-        self.gradients["Wc"] += Zt.T @ dCct
-        self.gradients["Wu"] += Zt.T @ dGut
-        self.gradients["Wf"] += Zt.T @ dGft
-        self.gradients["Wo"] += Zt.T @ dGot
+        self.gradients["Wc"] += np.matmul(Zt.T , dCct)
+        self.gradients["Wu"] += np.matmul(Zt.T , dGut)
+        self.gradients["Wf"] += np.matmul(Zt.T , dGft)
+        self.gradients["Wo"] += np.matmul(Zt.T , dGot)
         self.gradients["bo"] += dGot.sum(axis=0, keepdims=True)
         self.gradients["bu"] += dGut.sum(axis=0, keepdims=True)
         self.gradients["bf"] += dGft.sum(axis=0, keepdims=True)
@@ -4109,7 +4183,10 @@ class RNN(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with default
             parameters. Default is None.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(RNN, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
 
         self.init = init
         self.n_in = None
@@ -4230,7 +4307,11 @@ class RNN(LayerBase):
         layer : :doc:`Layer <numpy_ml.neural_nets.layers>` object
             The newly-initialized layer.
         """
-        self = super().set_params(summary_dict)
+        if sys.version.startswith('2'):
+            self = super(RNN, self).set_params(summary_dict)
+        else:
+            self = super().set_params(summary_dict)
+
         return self.cell.set_parameters(summary_dict)
 
     def freeze(self):
@@ -4286,7 +4367,10 @@ class LSTM(LayerBase):
             <numpy_ml.neural_nets.optimizers.SGD>` optimizer with
             default parameters. Default is None.
         """  # noqa: E501
-        super().__init__(optimizer)
+        if sys.version.startswith('2'):
+            super(LSTM, self).__init__(optimizer)
+        else:
+            super().__init__(optimizer)
 
         self.init = init
         self.n_in = None
@@ -4420,7 +4504,10 @@ class LSTM(LayerBase):
         layer : :doc:`Layer <numpy_ml.neural_nets.layers>` object
             The newly-initialized layer.
         """
-        self = super().set_params(summary_dict)
+        if sys.version.startswith('2'):
+            self = super(LSTM, self).set_params(summary_dict)
+        else:
+            self = super().set_params(summary_dict)
         return self.cell.set_parameters(summary_dict)
 
     def flush_gradients(self):

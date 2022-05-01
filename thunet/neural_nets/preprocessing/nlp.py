@@ -334,7 +334,11 @@ _STOP_WORDS = {
 _PUNCTUATION = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
 
 _WORD_REGEX = re.compile(r"(?u)\b\w\w+\b")  # sklearn default
-_PUNC_TABLE = str.maketrans("", "", _PUNCTUATION)
+import sys
+if sys.version.startswith('2'):
+    _PUNC_TABLE = {ord(key):None for key in _PUNCTUATION}
+else:
+    _PUNC_TABLE = str.maketrans("", "", _PUNCTUATION)
 
 
 def ngrams(sequence, N):
