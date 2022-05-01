@@ -33,7 +33,7 @@ setup(
     package_dir={"": "thunet"},
     license="GPLv3+",
     include_package_data=True,
-    python_requires=">=2.7, >=3.0",
+    python_requires=">=3.0",
     extras_require={},
     classifiers=[
         "Development Status :: 3 - Alpha",
@@ -42,7 +42,6 @@ setup(
         "Topic :: Scientific/Engineering",
         "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
     ],
 )

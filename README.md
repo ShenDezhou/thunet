@@ -1,4 +1,4 @@
-# THUNET: A simple deep learning framework for scientific and education purpos.
+# THUNET: A simple deep learning framework for scientific and education purpose.
 1. **Neural networks[1]**  
     * Layers / Layer-wise ops
         - Add
