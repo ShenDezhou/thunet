@@ -17,7 +17,7 @@ PROJECT_URLS = {
 
 setup(
     name="thunet",
-    version="0.0.3",
+    version="0.0.4",
     author="Dezhou Shen",
     author_email="sdz15@tsinghua.org.cn",
     project_urls=PROJECT_URLS,
@@ -29,11 +29,11 @@ setup(
         "numpy",
         "scipy"
     ],
-    packages=find_packages(where='thunet', include=['*']),
-    package_dir={"": "thunet"},
+    packages=find_packages(where='.', include=['*']),
+    # package_dir={"": ""},
     license="GPLv3+",
     include_package_data=True,
-    python_requires=">=3.0",
+    python_requires=">=2.7, >=3.0",
     extras_require={},
     classifiers=[
         "Development Status :: 3 - Alpha",
@@ -42,6 +42,7 @@ setup(
         "Topic :: Scientific/Engineering",
         "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
         "Operating System :: OS Independent",
+        "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
     ],
 )
