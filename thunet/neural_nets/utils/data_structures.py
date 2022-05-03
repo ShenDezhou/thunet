@@ -1,6 +1,10 @@
 import heapq
 from copy import copy
-from collections import Hashable
+import sys
+if sys.version.startswith('3.1'):
+    from collections.abc import Hashable
+else:
+    from collections import Hashable
 
 import numpy as np
 

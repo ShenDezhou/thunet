@@ -77,4 +77,24 @@
 Our contribution is implementation of the vanilla BERT and simple BERT.  
 All other codes following the licence claimed by (ddbourgin)[https://github.com/ddbourgin]  in his (Numpy_ML)![https://github.com/ddbourgin/numpy-ml]  project.
 
+
+4. **Release Frequent Ased Questions**
+
+* Q: Python2.7:    LookupError: unknown encoding: cp0  
+* A: Setting environment in the shell: set PYTHONIOENCODING=UTF-8
+
+5. **Product Release**
+
+Supported Python versions:
+
+| Python |
+|--------|
+| 2.7    |
+| 3.5    |
+| 3.6    |
+| 3.7    |
+| 3.8    |
+| 3.9    |
+| 3.10   |
+
 [1] David Bourgin. Machine learning, in numpy. https://github.com/ddbourgin/numpy-ml.

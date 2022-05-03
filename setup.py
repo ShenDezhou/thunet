@@ -17,7 +17,7 @@ PROJECT_URLS = {
 
 setup(
     name="thunet",
-    version="0.0.5",
+    version="0.0.6",
     author="Dezhou Shen",
     author_email="sdz15@tsinghua.org.cn",
     project_urls=PROJECT_URLS,
