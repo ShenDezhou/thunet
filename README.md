@@ -73,12 +73,12 @@
    * Simple BERT
 
 
-3. **REFERENCE**
+3. **REFERENCE**  
 Our contribution is implementation of the vanilla BERT and simple BERT.  
 All other codes following the licence claimed by (ddbourgin)[https://github.com/ddbourgin]  in his (Numpy_ML)![https://github.com/ddbourgin/numpy-ml]  project.
 
 
-4. **Release Frequent Ased Questions**
+4. **Release Frequent Asked Questions**
 
 * Q: Python2.7:    LookupError: unknown encoding: cp0  
 * A: Setting environment in the shell: set PYTHONIOENCODING=UTF-8
