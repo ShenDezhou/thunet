@@ -14,7 +14,7 @@ from ..schedulers import (
     KingScheduler,
 )
 
-from ..utils import (
+from ..weights import (
     he_normal,
     he_uniform,
     glorot_normal,

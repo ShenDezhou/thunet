@@ -859,7 +859,7 @@ def conv2D_naive(X, W, stride, pad, dilation=0):
 #######################################################################
 #                        Weight Initialization                        #
 #######################################################################
-
+# Moved to weights and would remove these weight initializations.
 
 def he_uniform(weight_shape):
     """
