@@ -242,7 +242,7 @@ class DotProductAttention_new(LayerBase):
             - Key vectors advertise their relevancy to questions
             - Value vectors give possible answers to questions
             - The dot product between Key and Query vectors provides scores for
-              each of the the `n_ex` different Value vectors
+              each of the `n_ex` different Value vectors
 
         For a single query and `n` key-value pairs, dot-product attention (with
         scaling) is::
