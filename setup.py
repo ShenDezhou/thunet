@@ -1,13 +1,9 @@
 # flake8: noqa
 from codecs import open
-
 from setuptools import setup, find_packages
 
 with open("README.md", encoding="utf-8") as f:
     LONG_DESCRIPTION = f.read()
-
-# with open("requirements.txt") as requirements:
-#     REQUIREMENTS = [r.strip() for r in requirements if r != "\n"]
 
 PROJECT_URLS = {
     "Bug Tracker": "https://github.com/ShenDezhou/thunet/issues",
@@ -17,7 +13,7 @@ PROJECT_URLS = {
 
 setup(
     name="thunet",
-    version="0.0.7",
+    version="0.0.8",
     author="Dezhou Shen",
     author_email="sdz15@tsinghua.org.cn",
     project_urls=PROJECT_URLS,
@@ -33,7 +29,7 @@ setup(
     # package_dir={"": ""},
     license="GPLv3+",
     include_package_data=True,
-    python_requires=">=2.7, >=3.0",
+    python_requires=">=2.7, >=3.5",
     extras_require={},
     classifiers=[
         "Development Status :: 3 - Alpha",
