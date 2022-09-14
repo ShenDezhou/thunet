@@ -505,7 +505,7 @@ def im2col(X, W_shape, pad, stride, dilation=0):
         The padding amount. If 'same', add padding to ensure that the output of
         a 2D convolution with a kernel of `kernel_shape` and stride `stride`
         produces an output volume of the same dimensions as the input.  If
-        2-tuple, specifies the number of padding rows and colums to add *on both
+        2-tuple, specifies the number of padding rows and columns to add *on both
         sides* of the rows/columns in X. If 4-tuple, specifies the number of
         rows/columns to add to the top, bottom, left, and right of the input
         volume.

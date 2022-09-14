@@ -63,7 +63,7 @@ class ActivationInitializer(object):
             alpha = re.match(r, act_str).groups()[0]
             act_fn = LeakyReLU(float(alpha))
         else:
-            raise ValueError("Unknown activation: {}".format(act_str))
+             raise ValueError("Unknown activation: {}".format(act_str))
         return act_fn
 
 
