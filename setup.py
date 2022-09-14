@@ -13,7 +13,7 @@ PROJECT_URLS = {
 
 setup(
     name="thunet",
-    version="0.0.8",
+    version="0.0.9",
     author="Dezhou Shen",
     author_email="sdz15@tsinghua.org.cn",
     project_urls=PROJECT_URLS,
@@ -23,7 +23,8 @@ setup(
     long_description_content_type="text/markdown",
     install_requires=[
         "numpy",
-        "scipy"
+        "scipy",
+        "py7zr"
     ],
     packages=find_packages(where='.', include=['*']),
     # package_dir={"": ""},

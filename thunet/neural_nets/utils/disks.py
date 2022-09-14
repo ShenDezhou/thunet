@@ -14,12 +14,24 @@ from typing import Any, BinaryIO, cast, Dict, Optional, Type, Tuple, Union, IO
 import copyreg
 import pickle
 import pathlib
+from py7zr import SevenZipFile, is_7zfile
 
-DEFAULT_PROTOCOL = 2
+# Protocol version 0 is the original “human-readable” protocol and is backwards compatible with earlier versions of Python.
+# Protocol version 1 is an old binary format which is also compatible with earlier versions of Python.
+# Protocol version 2 was introduced in Python 2.3. It provides much more efficient pickling of new-style classes. Refer to PEP 307 for information about improvements brought by protocol 2.
+# Protocol version 3 was added in Python 3.0. It has explicit support for bytes objects and cannot be unpickled by Python 2.x. This was the default protocol in Python 3.0–3.7.
+# Protocol version 4 was added in Python 3.4. It adds support for very large objects, pickling more kinds of objects, and some data format optimizations. It is the default protocol starting with Python 3.8. Refer to PEP 3154 for information about improvements brought by protocol 4.
+# Protocol version 5 was added in Python 3.8. It adds support for out-of-band data and speedup for in-band data. Refer to PEP 574 for information about improvements brought by protocol 5.
+import sys
+if sys.version.startswith('2'):
+    DEFAULT_PROTOCOL = 2
+else:
+    DEFAULT_PROTOCOL = 3
 
 LONG_SIZE = struct.Struct('=l').size
 INT_SIZE = struct.Struct('=i').size
 SHORT_SIZE = struct.Struct('=h').size
+
 
 MAGIC_NUMBER = 0x5448554e45543130
 PROTOCOL_VERSION = 1001
@@ -175,6 +187,38 @@ def _open_file_like(name_or_buffer, mode):
             raise RuntimeError(f"Expected 'r' or 'w' in mode but got {mode}")
 
 
+class _open_zipfile_reader(_opener):
+    def __init__(self, name_or_buffer) -> None:
+        super(_open_zipfile_reader, self).__init__(SevenZipFile(name_or_buffer))
+
+
+class _open_zipfile_writer_file(_opener):
+    def __init__(self, name) -> None:
+        super(_open_zipfile_writer_file, self).__init__(SevenZipFile(str(name), mode='w'))
+
+    def __exit__(self, *args) -> None:
+        self.file_like.close()
+
+
+class _open_zipfile_writer_buffer(_opener):
+    def __init__(self, buffer) -> None:
+        self.buffer = buffer
+        super(_open_zipfile_writer_buffer, self).__init__(SevenZipFile(buffer))
+
+    def __exit__(self, *args) -> None:
+        self.file_like.close()
+        self.buffer.flush()
+
+
+def _open_zipfile_writer(name_or_buffer):
+    container: Type[_opener]
+    if _is_path(name_or_buffer):
+        container = _open_zipfile_writer_file
+    else:
+        container = _open_zipfile_writer_buffer
+    return container(name_or_buffer)
+
+
 def _is_compressed_file(f) -> bool:
     compress_modules = ['gzip']
     try:
@@ -238,34 +282,53 @@ def _check_dill_version(pickle_module) -> None:
 
 def save(obj, f: Union[str, os.PathLike, BinaryIO, IO[bytes]],
          pickle_module=pickle, pickle_protocol=DEFAULT_PROTOCOL, _use_new_zipfile_serialization=True) -> None:
-    with _open_file_like(f, 'wb') as opened_file:
-        f = opened_file
-        pickle_module.dump(MAGIC_NUMBER, f, protocol=pickle_protocol)
-        pickle_module.dump(PROTOCOL_VERSION, f, protocol=pickle_protocol)
-        pickle_module.dump({}, f, protocol=pickle_protocol)
-        pickler = pickle_module.Pickler(f, protocol=pickle_protocol)
-        # pickler.persistent_id = persistent_id
-        pickler.dump(obj)
+    if _use_new_zipfile_serialization:
+        with _open_zipfile_writer(f) as opened_zipfile:
+            data_buf = io.BytesIO()
+            pickler = pickle_module.Pickler(data_buf, protocol=pickle_protocol)
+            # pickler.persistent_id = persistent_id
+            pickler.dump(obj)
+            read_data_buf = io.BytesIO(data_buf.getvalue())
+            opened_zipfile.writef(read_data_buf, "data.pkl")
+            del data_buf, read_data_buf
+    else:
+        with _open_file_like(f, 'wb') as opened_file:
+            f = opened_file
+            pickle_module.dump(MAGIC_NUMBER, f, protocol=pickle_protocol)
+            pickle_module.dump(PROTOCOL_VERSION, f, protocol=pickle_protocol)
+            pickle_module.dump({}, f, protocol=pickle_protocol)
+            pickler = pickle_module.Pickler(f, protocol=pickle_protocol)
+            # pickler.persistent_id = persistent_id
+            pickler.dump(obj)
 
-        # serialized_storage_keys = sorted(serialized_storages.keys())
-        # pickle_module.dump(serialized_storage_keys, f, protocol=pickle_protocol)
-        f.flush()
+            # serialized_storage_keys = sorted(serialized_storages.keys())
+            # pickle_module.dump(serialized_storage_keys, f, protocol=pickle_protocol)
+            f.flush()
 
 def load(f, map_location=None, pickle_module=pickle, **pickle_load_args):
 
     with _open_file_like(f, 'rb') as opened_file:
-        f = opened_file
-        magic_number = pickle_module.load(f, **pickle_load_args)
-        if magic_number != MAGIC_NUMBER:
-            raise RuntimeError("Invalid magic number; corrupt file?")
-        protocol_version = pickle_module.load(f, **pickle_load_args)
-        if protocol_version != PROTOCOL_VERSION:
-            raise RuntimeError("Invalid protocol version: %s" % protocol_version)
+        pickle_file = 'data.pkl'
+        if is_7zfile(opened_file):
+            with _open_zipfile_reader(opened_file) as opened_zipfile:
+                data_file = opened_zipfile.read(pickle_file)[pickle_file]
+                unpickler = pickle_module.Unpickler(data_file, **pickle_load_args)
+                # unpickler.persistent_load = persistent_load
+                result = unpickler.load()
+                return result
+        else:
+            f = opened_file
+            magic_number = pickle_module.load(f, **pickle_load_args)
+            if magic_number != MAGIC_NUMBER:
+                raise RuntimeError("Invalid magic number; corrupt file?")
+            protocol_version = pickle_module.load(f, **pickle_load_args)
+            if protocol_version != PROTOCOL_VERSION:
+                raise RuntimeError("Invalid protocol version: %s" % protocol_version)
 
-        _sys_info = pickle_module.load(f, **pickle_load_args)
-        unpickler = pickle_module.Unpickler(f, **pickle_load_args)
-        # unpickler.persistent_load = persistent_load
-        result = unpickler.load()
+            _sys_info = pickle_module.load(f, **pickle_load_args)
+            unpickler = pickle_module.Unpickler(f, **pickle_load_args)
+            # unpickler.persistent_load = persistent_load
+            result = unpickler.load()
     return result
 
 
