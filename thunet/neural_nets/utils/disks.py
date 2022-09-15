@@ -337,6 +337,6 @@ def _is_torchscript_zip(zip_file):
 
 if __name__=="__main__":
     obj = {'k':'v'}
-    save(obj,"model.pt")
-    loaded = load("model.pt")
+    save(obj,"model.thu")
+    loaded = load("model.thu")
     print(loaded)

@@ -2,11 +2,11 @@ from time import time
 
 import numpy as np
 
-from ..layers import Embedding
-from ..losses import NCELoss
+from thunet.thunet.neural_nets.layers import Embedding
+from thunet.thunet.neural_nets.losses import NCELoss
 
-from ..preprocessing.nlp import Vocabulary, tokenize_words
-from ..utils.data_structures import DiscreteSampler
+from thunet.thunet.neural_nets.preprocessing.nlp import Vocabulary, tokenize_words
+from thunet.thunet.neural_nets.utils.data_structures import DiscreteSampler
 
 
 class Word2Vec(object):

@@ -3,9 +3,9 @@ from collections import OrderedDict
 
 import numpy as np
 
-from ..utils import minibatch
-from ..layers import FullyConnected
-from ..losses import WGAN_GPLoss
+from thunet.thunet.neural_nets.utils import minibatch
+from thunet.thunet.neural_nets.layers import FullyConnected
+from thunet.thunet.neural_nets.losses import WGAN_GPLoss
 
 
 class WGAN_GP(object):
