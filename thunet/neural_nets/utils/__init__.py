@@ -6,3 +6,4 @@ functions, primarily for dealing with CNNs.
 """
 
 from .utils import *
+from .disks import *
