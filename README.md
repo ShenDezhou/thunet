@@ -98,3 +98,5 @@ Supported Python versions:
 | 3.10   |
 
 [1] David Bourgin. Machine learning, in numpy. https://github.com/ddbourgin/numpy-ml.
+
+THUNET Community @Twitter：https://twitter.com/i/lists/1570780919627395073
